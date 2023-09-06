@@ -24,6 +24,10 @@ module.exports = {
 				"sass-loader",
 			  ],
 			},
+			{
+				test: /\.(png|ico|webmanifest)$/i,
+				type: 'asset/resource'
+			},
 		],
 	},
 	output: {

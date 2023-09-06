@@ -1,0 +1,163 @@
+<html>
+	<head>
+		<style>
+			*
+			{
+				font-family: 'Courier New', Courier, monospace;
+			}
+		</style>
+	</head>
+<body class="p-5">
+	SRC
+	<div class="row">
+		<div class="col">
+			<input type="file" name="file" class="form-control">
+
+			<form class="form-group js-search">
+				<div class="row">
+					<div class="col">
+						<input type="search" class="form-control" placeholder="0xAB or 123">
+					</div>
+					<div class="col-auto">
+						<select name="searchType" class="form-control">
+							<option value="uint8">uint8</option>
+							<option value="uint16">uint16</option>
+							<option value="uint24">uint24</option>
+							<option value="uint32">uint32</option>
+						</select>
+					</div>
+					<div class="col-auto">
+						<button type="submit" class="btn btn-sm btn-primary">Search</button>
+					</div>
+				</div>
+			</form>
+			
+
+			<div class="table-responsive">
+				<table class="table table-sm table-bordered table-hover tableFixHead js-file-view hide-selection">
+					<thead>
+						<tr>
+							<th></th>
+							<th>00</th>
+							<th>01</th>
+							<th>02</th>
+							<th>03</th>
+							<th>04</th>
+							<th>05</th>
+							<th>06</th>
+							<th>07</th>
+							<th>08</th>
+							<th>09</th>
+							<th>0A</th>
+							<th>0B</th>
+							<th>0C</th>
+							<th>0D</th>
+							<th>0E</th>
+							<th>0F</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th></th>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div class="col p-relative">
+			<form class="p-sticky js-decoder">
+				<h1>Hex decoder</h1>
+				<div class="row mb-2">
+					<div class="col-auto">
+						<input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte0" style="width: 4em;" class="form-control" autocomplete="off">
+					</div>
+					<div class="col-auto">
+						<input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte1" style="width: 4em;" class="form-control" autocomplete="off">
+					</div>
+					<div class="col-auto">
+						<input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte2" style="width: 4em;" class="form-control" autocomplete="off">
+					</div>
+					<div class="col-auto">
+						<input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte3" style="width: 4em;" class="form-control" autocomplete="off">
+					</div>
+				</div>
+				
+				<table class="table table-sm table-bordered">
+					<thead>
+						
+					</thead>
+					<tbody>
+						<tr>
+							<td>Binary:</td>
+							<td class="js-binary-0"></td>
+							<td class="js-binary-1"></td>
+							<td class="js-binary-2"></td>
+							<td class="js-binary-3"></td>
+						</tr>
+						<tr>
+							<td>uint8:</td>
+							<td class="js-uint8-0"></td>
+							<td class="js-uint8-1"></td>
+							<td class="js-uint8-2"></td>
+							<td class="js-uint8-3"></td>
+						</tr>
+						<tr>
+							<td></td>
+							<th colspan="2">Little Endian</th>
+							<th colspan="2">Big Endian</th>
+						</tr>
+						<tr>
+							<td>uint16:</td>
+							<td colspan="2" class="js-uint16-l"></td>
+							<td colspan="2" class="js-uint16-b"></td>
+						</tr>
+						<tr>
+							<td>uint24:</td>
+							<td colspan="2" class="js-uint24-l"></td>
+							<td colspan="2" class="js-uint24-b"></td>
+						</tr>
+						<tr>
+							<td>uint32:</td>
+							<td colspan="2" class="js-uint32-l"></td>
+							<td colspan="2" class="js-uint32-b"></td>
+						</tr>
+					</tbody>
+				</table>
+				<hr>
+				<h1>Calculator</h1>
+				<textarea class="form-control" name="calculator" autocomplete="off"></textarea>
+				<pre class="js-calculator-output"></pre>
+				<h1>File</h1>
+				<table>
+					<tbody>
+						<tr>
+							<th>Size</th>
+							<td class="js-file-size"></td>
+						</tr>
+						<tr>
+							<th>Current position</th>
+							<td class="js-file-current-pos"></td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
+		</div>
+	</div>
+</body>
+</html>

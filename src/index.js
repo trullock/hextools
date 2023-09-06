@@ -279,6 +279,39 @@ function search(value, type)
 			highlight(locations[i] + 1)
 		}
 	}
+	else if(type == "uint24")
+	{
+		for(var i = 0; i < fileView.byteLength; i++)
+		{
+			if(i == fileView.byteLength - 2)
+				break;
+
+			let buff = new Uint8Array(4);
+			buff[0] = fileView.getUint8(i);
+			buff[1] = fileView.getUint8(i + 1);
+			buff[2] = fileView.getUint8(i + 2);
+			buff[3] = 0;
+			let dvl = new DataView(buff.buffer);
+			
+			if(dvl.getUint32(0, true) == value)
+				locations.push(i);
+
+			buff[0] = 0
+			buff[1] = fileView.getUint8(i);
+			buff[2] = fileView.getUint8(i + 1);
+			buff[3] = fileView.getUint8(i + 2);
+
+			if(dvl.getUint32(0, false) == value)
+				locations.push(i);
+		}
+
+		for(var i = 0; i < locations.length; i++)
+		{
+			highlight(locations[i])
+			highlight(locations[i] + 1)
+			highlight(locations[i] + 2)
+		}
+	}
 	else if(type == "uint32")
 	{
 		for(var i = 0; i < fileView.byteLength; i++)
@@ -301,6 +334,4 @@ function search(value, type)
 			highlight(locations[i] + 3)
 		}
 	}
-
-	
 }

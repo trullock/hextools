@@ -4,9 +4,9 @@
   "description": "",
   "private": "true",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "webpack"
   },
-  "author": "",
+  "author": "@trullock",
   "license": "ISC",
   "dependencies": {
     "@trullock/dollar": "^2.1.0",

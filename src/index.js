@@ -1,4 +1,4 @@
-import './style.scss'
+import './scss/theme.scss'
 import './android-chrome-192x192.png'
 import './android-chrome-512x512.png'
 import './apple-touch-icon.png'
@@ -36,6 +36,7 @@ const $uint32l = document.querySelector('.js-uint32-l');
 const $uint32b = document.querySelector('.js-uint32-b');
 
 const $calculator = document.querySelector('[name=calculator]')
+const $calcError = document.querySelector('.js-calc-error')
 const $calcOut = document.querySelector('.js-calculator-output');
 
 function dec2bin(num)
@@ -96,10 +97,11 @@ $frmDecoder.addEventListener('input', e => {
 	{
 		const answer = evaluate($calculator.value);
 		$calcOut.textContent = `${answer}\n0x${answer.toString(16)}`;
+		$calcError.textContent = '';
 	}
 	catch(e)
 	{
-		$calcOut.textContent = e.message
+		$calcError.textContent = e.message
 	}
 
 })

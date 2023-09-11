@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@trullock/dollar": "^2.1.0",
-    "bootstrap": "^5.3.1",
+    "bootstrap": "5.2.3",
     "mathjs": "^11.11.0"
   },
   "devDependencies": {

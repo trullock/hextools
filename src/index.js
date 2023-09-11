@@ -238,16 +238,7 @@ document.$('.js-search').addEventListener('submit', e => {
 	var value = document.$('[type=search]').value;
 	var type = document.$('[name=searchType]').value;
 	
-	try
-	{
-		value = evaluate(value);
-
-		search(value, type); 
-	}
-	catch(e)
-	{
-
-	}
+	search(value, type);
 })
 
 function search(value, type)
@@ -255,6 +246,46 @@ function search(value, type)
 	clearHighlight();
 
 	const locations = [];
+
+	if(type == "literal")
+	{
+		if(value.length % 2 == 1)
+		{
+			// TODO: proper error
+			console.error("Must be nultiple of 2 chars long")
+		}
+		else
+		{
+			let bytes = [];
+			for(var i = 0; i < value.length; i +=2)
+				bytes.push(parseInt(value.substr(i, 2), 16));
+
+			for(var i = 0; i < fileView.byteLength - bytes.length + 1; i++)
+			{
+				let match = bytes.reduce((p, c, j) => p && fileView.getUint8(i + j) == c, true);
+
+				if(match)
+					locations.push(i);
+			}
+
+			for(var i = 0; i < locations.length; i++)
+			{
+				for(var j = 0; j < bytes.length; j++)
+					highlight(locations[i] + j)
+			}
+		}
+		return;
+	}
+
+	try
+	{
+		value = evaluate(value);
+	}
+	catch(e)
+	{
+		// toDO:
+		return;
+	}
 
 	if(type == "uint8")
 	{
@@ -271,11 +302,8 @@ function search(value, type)
 	}
 	else if(type == "uint16")
 	{
-		for(var i = 0; i < fileView.byteLength; i++)
+		for(var i = 0; i < fileView.byteLength - 1; i++)
 		{
-			if(i == fileView.byteLength - 1)
-				break;
-
 			if(fileView.getUint16(i, false) == value)
 				locations.push(i);
 
@@ -291,11 +319,8 @@ function search(value, type)
 	}
 	else if(type == "uint24")
 	{
-		for(var i = 0; i < fileView.byteLength; i++)
+		for(var i = 0; i < fileView.byteLength - 2; i++)
 		{
-			if(i == fileView.byteLength - 2)
-				break;
-
 			let buff = new Uint8Array(4);
 			buff[0] = fileView.getUint8(i);
 			buff[1] = fileView.getUint8(i + 1);
@@ -324,11 +349,8 @@ function search(value, type)
 	}
 	else if(type == "uint32")
 	{
-		for(var i = 0; i < fileView.byteLength; i++)
+		for(var i = 0; i < fileView.byteLength - 3; i++)
 		{
-			if(i == fileView.byteLength - 3)
-				break;
-
 			if(fileView.getUint32(i, false) == value)
 				locations.push(i);
 

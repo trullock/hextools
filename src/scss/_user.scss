@@ -35,12 +35,14 @@
 	th:last-child
 	{
 		border-right: 0;
+		padding-right: 4px !important;
 	}
 
 	th:first-child,
 	td:first-child
 	{
 		border-left: 0;
+		padding-left: 4px !important;
 	}
 }
 
@@ -70,4 +72,10 @@
 	{
 		padding: 0.5rem 0.5rem;
 	}
+}
+
+.hex-inp
+{
+	width: 3em;
+	display: inline-block;
 }

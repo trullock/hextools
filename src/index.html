@@ -26,6 +26,7 @@
 							</div>
 							<div class="col-auto">
 								<select name="searchType" class="form-select form-select-sm">
+									<option value="literal">bytes</option>
 									<option value="uint8">uint8</option>
 									<option value="uint16">uint16</option>
 									<option value="uint24">uint24</option>
@@ -36,7 +37,7 @@
 								<button type="submit" class="btn btn-sm btn-primary">Search</button>
 							</div>
 						</div>
-						<small id="searchHelp" class="form-text text-muted mb-0">0xFF to search by hex or 123 to search decimal</small>
+						<small id="searchHelp" class="form-text text-muted mt-2 mb-0">0xFF to search by hex or 123 to search decimal</small>
 					</form>
 				</div>
 				<table class="card-table table table-sm table-bordered table-hover table-file js-file-view">
@@ -97,14 +98,14 @@
 					<div class="card-header">
 						<h4 class="card-header-title">Hex decoder</h4>
 					</div>
-					<table class="card-table table table-xs textg-end">
+					<table class="card-table table table-xs text-end">
 						<thead>
 							<tr>
 								<td></td>
-								<td><input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte0" style="width: 4em;" class="form-control form-control-sm text-end" autocomplete="off"></td>
-								<td><input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte1" style="width: 4em;" class="form-control form-control-sm text-end" autocomplete="off"></td>
-								<td><input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte2" style="width: 4em;" class="form-control form-control-sm text-end" autocomplete="off"></td>
-								<td><input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte3" style="width: 4em;" class="form-control form-control-sm text-end" autocomplete="off"></td>
+								<td><input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte0" class="form-control form-control-sm text-end hex-inp" autocomplete="off"></td>
+								<td><input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte1" class="form-control form-control-sm text-end hex-inp" autocomplete="off"></td>
+								<td><input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte2" class="form-control form-control-sm text-end hex-inp" autocomplete="off"></td>
+								<td><input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte3" class="form-control form-control-sm text-end hex-inp" autocomplete="off"></td>
 							</tr>
 						</thead>
 						<tbody>

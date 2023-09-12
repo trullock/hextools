@@ -96,12 +96,34 @@
 			<form class="p-sticky js-decoder">
 				<div class="card">
 					<div class="card-header">
-						<h4 class="card-header-title">Hex decoder</h4>
+						<h4 class="card-header-title">File</h4>
 					</div>
-					<table class="card-table table table-xs text-end">
+					<table class="card-table table table-sm">
+						<tbody>
+							<tr>
+								<th>Size</th>
+								<td class="js-file-size"></td>
+							</tr>
+							<tr>
+								<th>Current position</th>
+								<td class="js-file-current-pos"></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="card">
+					<div class="card-header">
+						<h4 class="card-header-title">Data inspector</h4>
+					</div>
+					<table class="card-table table table-bordered table-inner-bordered table-xs text-end">
 						<thead>
 							<tr>
-								<td></td>
+								<td>
+									<select name="endianness" class="form-select form-select-sm">
+										<option value="little">Little Endian</option>
+										<option value="big">Big Endian</option>
+									</select>
+								</td>
 								<td><input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte0" class="form-control form-control-sm text-end hex-inp" autocomplete="off"></td>
 								<td><input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte1" class="form-control form-control-sm text-end hex-inp" autocomplete="off"></td>
 								<td><input type="text" pattern="[0-9a-fA-F]" maxlength="2" name="byte2" class="form-control form-control-sm text-end hex-inp" autocomplete="off"></td>
@@ -124,41 +146,39 @@
 								<td class="js-uint8-3"></td>
 							</tr>
 							<tr>
-								<td></td>
-								<th colspan="2">Little Endian</th>
-								<th colspan="2">Big Endian</th>
+								<td>int8:</td>
+								<td class="js-int8-0"></td>
+								<td class="js-int8-1"></td>
+								<td class="js-int8-2"></td>
+								<td class="js-int8-3"></td>
 							</tr>
 							<tr>
 								<td>uint16:</td>
-								<td colspan="2" class="js-uint16-l"></td>
-								<td colspan="2" class="js-uint16-b"></td>
+								<td colspan="2" class="js-uint16-0"></td>
+								<td colspan="2" class="js-uint16-1"></td>
+							</tr>
+							<tr>
+								<td>int16:</td>
+								<td colspan="2" class="js-int16-0"></td>
+								<td colspan="2" class="js-int16-1"></td>
 							</tr>
 							<tr>
 								<td>uint24:</td>
-								<td colspan="2" class="js-uint24-l"></td>
-								<td colspan="2" class="js-uint24-b"></td>
+								<td colspan="3" class="js-uint24"></td>
+								<td class="cell-disabled"></td>
+							</tr>
+							<tr>
+								<td>int24:</td>
+								<td colspan="3" class="js-int24"></td>
+								<td class="cell-disabled"></td>
 							</tr>
 							<tr>
 								<td>uint32:</td>
-								<td colspan="2" class="js-uint32-l"></td>
-								<td colspan="2" class="js-uint32-b"></td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-				<div class="card">
-					<div class="card-header">
-						<h4 class="card-header-title">File</h4>
-					</div>
-					<table class="card-table table table-sm">
-						<tbody>
-							<tr>
-								<th>Size</th>
-								<td class="js-file-size"></td>
+								<td colspan="4" class="js-uint32"></td>
 							</tr>
 							<tr>
-								<th>Current position</th>
-								<td class="js-file-current-pos"></td>
+								<td>int32:</td>
+								<td colspan="4" class="js-int32"></td>
 							</tr>
 						</tbody>
 					</table>

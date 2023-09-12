@@ -13,6 +13,8 @@ import '@trullock/dollar'
 
 const $frmDecoder = document.querySelector('form.js-decoder');
 			
+const $endianness = document.querySelector('[name=endianness]');
+
 const $byte0 = document.querySelector('[name=byte0]');
 const $byte1 = document.querySelector('[name=byte1]');
 const $byte2 = document.querySelector('[name=byte2]');
@@ -28,12 +30,19 @@ const $uint81 = document.querySelector('.js-uint8-1');
 const $uint82 = document.querySelector('.js-uint8-2');
 const $uint83 = document.querySelector('.js-uint8-3');
 
-const $uint16l = document.querySelector('.js-uint16-l');
-const $uint16b = document.querySelector('.js-uint16-b');
-const $uint24l = document.querySelector('.js-uint24-l');
-const $uint24b = document.querySelector('.js-uint24-b');
-const $uint32l = document.querySelector('.js-uint32-l');
-const $uint32b = document.querySelector('.js-uint32-b');
+const $int80 = document.querySelector('.js-int8-0');
+const $int81 = document.querySelector('.js-int8-1');
+const $int82 = document.querySelector('.js-int8-2');
+const $int83 = document.querySelector('.js-int8-3');
+
+const $uint160 = document.querySelector('.js-uint16-0');
+const $uint161 = document.querySelector('.js-uint16-1');
+const $int160 = document.querySelector('.js-int16-0');
+const $int161 = document.querySelector('.js-int16-1');
+const $uint24 = document.querySelector('.js-uint24');
+const $int24 = document.querySelector('.js-int24');
+const $uint32 = document.querySelector('.js-uint32');
+const $int32 = document.querySelector('.js-int32');
 
 const $calculator = document.querySelector('[name=calculator]')
 const $calcError = document.querySelector('.js-calc-error')
@@ -53,6 +62,8 @@ function uint82hex(num, padding = 2)
 
 $frmDecoder.addEventListener('input', e => {
 
+	const littleEndian = $endianness.value == "little";
+
 	const buff = new Uint8Array(4);
 	buff[0] = parseInt($byte0.value, 16);
 	buff[1] = parseInt($byte1.value, 16)
@@ -71,27 +82,39 @@ $frmDecoder.addEventListener('input', e => {
 	$uint82.textContent = buff[2];
 	$uint83.textContent = buff[3];
 
-	$uint16l.textContent = view.getUint16(0, true);
-	$uint16b.textContent = view.getUint16(0, false);
+	$int80.textContent = view.getInt8(0);
+	$int81.textContent = view.getInt8(1);
+	$int82.textContent = view.getInt8(2);
+	$int83.textContent = view.getInt8(3);
 
-	const buff24l = new Uint8Array(4);
-	buff24l[0] = parseInt($byte0.value, 16);
-	buff24l[1] = parseInt($byte1.value, 16);
-	buff24l[2] = parseInt($byte2.value, 16);
-	buff24l[3] = 0
-	const view24l = new DataView(buff24l.buffer);
-	$uint24l.textContent = view24l.getUint32(0, true);
+	$uint160.textContent = view.getUint16(0, littleEndian);
+	$uint161.textContent = view.getUint16(2, littleEndian);
 
-	const buff24b = new Uint8Array(4);
-	buff24b[0] = 0
-	buff24b[1] = parseInt($byte0.value, 16);
-	buff24b[2] = parseInt($byte1.value, 16);
-	buff24b[3] = parseInt($byte2.value, 16);
-	const view24b = new DataView(buff24b.buffer);
-	$uint24b.textContent = view24b.getUint32(0, false);
+	$int160.textContent = view.getInt16(0, littleEndian);
+	$int161.textContent = view.getInt16(2, littleEndian);
 
-	$uint32l.textContent = view.getUint32(0, true);
-	$uint32b.textContent = view.getUint32(0, false);
+	const buff24 = new Uint8Array(4);
+	if(littleEndian)
+	{
+		buff24[0] = parseInt($byte0.value, 16);
+		buff24[1] = parseInt($byte1.value, 16);
+		buff24[2] = parseInt($byte2.value, 16);
+		buff24[3] = 0
+	}
+	else
+	{
+		buff24[0] = 0
+		buff24[1] = parseInt($byte0.value, 16);
+		buff24[2] = parseInt($byte1.value, 16);
+		buff24[3] = parseInt($byte2.value, 16);
+	}
+	const view24l = new DataView(buff24.buffer);
+	const uint24 = view24l.getUint32(0, littleEndian);
+	$uint24.textContent = uint24;
+	$int24.textContent = fromTwosComplement(uint24, 3);
+
+	$uint32.textContent = view.getUint32(0, littleEndian);
+	$int32.textContent = view.getInt32(0, littleEndian);
 	
 	try
 	{
@@ -366,4 +389,19 @@ function search(value, type)
 			highlight(locations[i] + 3)
 		}
 	}
+}
+
+function fromTwosComplement(twosComplement, numberBytes) 
+{   
+    var numberBits = (numberBytes || 1) * 8;
+    
+    if (twosComplement < 0 || twosComplement > (1 << numberBits) - 1)
+        throw "Two's complement out of range given " + numberBytes + " byte(s) to represent.";
+    
+    // If less than the maximum positive: 2^(n-1)-1, the number stays positive
+    if (twosComplement <= Math.pow(2, numberBits - 1) - 1)
+        return twosComplement;
+    
+    // Else convert to it's negative representation
+    return -(((~twosComplement) & ((1 << numberBits) - 1)) + 1);
 }

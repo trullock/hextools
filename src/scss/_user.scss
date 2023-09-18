@@ -98,3 +98,11 @@
 	width: 3em;
 	display: inline-block;
 }
+
+.table-highlight
+{
+	border-color: $table-border-color !important;
+	background-color: $table-color !important;
+	color: white !important;
+
+}

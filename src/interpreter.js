@@ -1,6 +1,5 @@
 
 import yaml from 'js-yaml'
-import {Blob} from 'node:buffer';
 
 export function parseSchema(yml)
 {
@@ -60,6 +59,9 @@ function interpretValue(buffer, position, value, littleEndian)
 	if(value.bytes === 1)
 	{
 		retval.value = buffer[position]
+		if(retval.type == '?')
+			retval.type = 'byte';
+		
 		return retval;
 	} 
 
@@ -90,7 +92,7 @@ function interpretValue(buffer, position, value, littleEndian)
 		retval.type = 'utf8'
 		retval.value = readNullTerminatedString(buffer, position, position + value.bytes)
 		// BUG: what happens at the end of the file? we'll add +1 and be out of range
-		retval.end = retval.start + (new Blob([retval.value]).size); // don't -1 because we need to count the null terminator we found
+		retval.end = retval.start + ((new TextEncoder().encode(retval.value)).length); // don't -1 because we need to count the null terminator we found
 		return retval;
 	}
 

@@ -7,9 +7,12 @@ import './favicon-16x16.png'
 import './favicon-32x32.png'
 import './site.webmanifest'
 
+import buff from 'buffer'
+const Buffer = buff.Buffer;
 
 import { evaluate } from 'mathjs';
 import '@trullock/dollar'
+import { interpret, parseSchema } from './interpreter.js'
 
 const $frmDecoder = document.querySelector('form.js-decoder');
 			
@@ -136,15 +139,16 @@ const $fileViewBody = $fileView.$('tbody');
 const $fileViewRow = $fileViewBody.firstElementChild;
 $fileViewRow.remove();
 
-const $file = document.$('[type=file]');
+const $file = document.$('#fupFile');
 const $fileSize = document.$('.js-file-size');
 const $fileCurrentPos = document.$('.js-file-current-pos');
 var fileView = null;
+let fileBuffer = null;
 
 $file.addEventListener('change', async e => {
 	const reader = new FileReader();
-	let buffer = await e.target.files[0].arrayBuffer();
-	fileView = new DataView(buffer);
+	fileBuffer = await e.target.files[0].arrayBuffer();
+	fileView = new DataView(fileBuffer);
 	
 	$fileSize.textContent = fileView.byteLength
 	let mousedown = -1;
@@ -199,6 +203,57 @@ $file.addEventListener('change', async e => {
 	}
 })
 
+
+
+const $interpreted = document.$('.js-interpreted');
+const $interpretedBody = $interpreted.$('tbody');
+const $interpretedRow = $interpretedBody.firstElementChild;
+$interpretedRow.remove();
+
+const $schema = document.$('#fupSchema');
+$schema.addEventListener('change', async e => {
+	const reader = new FileReader();
+	reader.addEventListener('load', () => {
+		let yml = reader.result;
+
+		let schema = parseSchema(yml);
+
+		let results = interpret(Buffer.from(fileBuffer), schema)
+
+		let colors = ['table-primary', 'table-info', 'table-warning', 'table-secondary', 'table-danger'];
+		let colorIndex = 0;
+
+		for(var r = 0; r < results.length; r++)
+		{
+			let result = results[r];
+
+			let $row = $interpretedRow.cloneNode(true);
+
+			$row.children[0].classList.add(colors[colorIndex]);
+			for(var h = result.start; h <= result.end; h++)
+				highlight(h, colors[colorIndex]);
+			colorIndex = colorIndex == colors.length - 1 ? 0 : colorIndex + 1;
+
+			$row.children[1].textContent = result.name;
+
+			$row.children[2].textContent = result.value;
+			$row.children[3].textContent = result.start;
+			$row.children[4].textContent = result.end;
+			$row.children[5].textContent = result.type;
+
+			$row.addEventListener('click', e=> {
+				clearHighlight();
+				for(var h = result.start; h <= result.end; h++)
+					highlight(h);
+			})
+
+			$interpretedBody.appendChild($row);
+		}
+
+	})
+	reader.readAsText(e.target.files[0]);
+})
+
 function select(start, end)
 {
 	if(end === undefined)
@@ -213,7 +268,7 @@ function select(start, end)
 	$fileCurrentPos.textContent = `${start} - ${end}. 0x${start.toString(16).toUpperCase()} - 0x${end.toString(16).toUpperCase()}. ${end-start+1} bytes selected.`;
 }
 
-function highlight(index)
+function highlight(index, color)
 {
 	if(index >= fileView.byteLength)
 		return;
@@ -221,12 +276,12 @@ function highlight(index)
 	var col = index % 16;
 	var row = Math.floor(index / 16);
 
-	$fileViewBody.children[row].children[col + 1].classList.add('table-success');
+	$fileViewBody.children[row].children[col + 1].classList.add(color || 'table-highlight');
 }
 
 function clearHighlight()
 {
-	$fileViewBody.$('.table-success')?.classList.remove('table-success');
+	$fileViewBody.$('.table-highlight')?.classList.remove('table-highlight');
 }
 
 var isCtrl = false;

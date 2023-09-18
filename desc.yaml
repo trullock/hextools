@@ -1,0 +1,18 @@
+header:
+  version:
+  finished:
+  log id: 15
+  config name: 23
+  time: uint64
+  location: nullstr
+  latitude:
+    bytes: 8
+    type: float
+  longitude:
+    bytes: 8
+    type: float
+logs:
+  - log:
+      time: uint24
+      altitude: uint24
+    end: 0xFFFFFF

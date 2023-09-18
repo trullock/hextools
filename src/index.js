@@ -219,7 +219,6 @@ $schema.addEventListener('change', async e => {
 		let schema = parseSchema(yml);
 
 		let results = interpret(Buffer.from(fileBuffer), schema)
-
 		let colors = ['table-primary', 'table-info', 'table-warning', 'table-secondary', 'table-danger'];
 		let colorIndex = 0;
 

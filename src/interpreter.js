@@ -34,13 +34,17 @@ export function interpret(buffer, schema)
 			if(!datum)
 				continue;
 
-			result.push(datum);
-
-			p = datum.end + 1;
+			if(Array.isArray(datum) && datum.length)
+			{
+				result = result.concat(datum);
+				p = datum[datum.length - 1].end + 1;
+			}
+			else 
+			{
+				result.push(datum);
+				p = datum.end + 1;
+			}
 		}
-
-		//if(isSectionEndMarker(buffer, p, section))
-		//	continue;
 	}
 
 	return result;
@@ -61,7 +65,7 @@ function interpretValue(buffer, position, value, littleEndian)
 		retval.value = buffer[position]
 		if(retval.type == '?')
 			retval.type = 'byte';
-		
+
 		return retval;
 	} 
 
@@ -74,10 +78,27 @@ function interpretValue(buffer, position, value, littleEndian)
 			retval.end = retval.start + value.bytes - 1;
 			return retval;
 		}
-		
-		// let dest = Buffer.allocUnsafe(value.bytes);
-		// buffer.copy(dest, 0, position, position + value.bytes)
-		
+
+		if(value.type == 'float')
+		{
+			if(value.bytes == 8)
+			retval.value =  littleEndian ? buffer.readDoubleLE(position) : buffer.readDoubleBE(position);
+			else if(value.bytes == 4)
+				retval.value =  littleEndian ? buffer.readFloatLE(position) : buffer.readFloatBE(position);
+			else
+				throw new Error(`Unsupported float number of bytes ${value.bytes} for ${value.name}`);
+			
+			retval.end = retval.start + value.bytes - 1;
+
+			return retval;
+		}
+	}
+
+	if(value.type == 'uint24')
+	{
+		retval.value = littleEndian ? buffer.readUIntLE(position, 3) : buffer.readUIntBE(position, 3);
+		retval.end = retval.start + 3 - 1;
+		return retval;
 	}
 
 	if(value.type == 'uint64')
@@ -86,6 +107,7 @@ function interpretValue(buffer, position, value, littleEndian)
 		retval.end = retval.start + 8 - 1;
 		return retval;
 	}
+	
 
 	if(value.type == 'nullstr')
 	{
@@ -93,6 +115,31 @@ function interpretValue(buffer, position, value, littleEndian)
 		retval.value = readNullTerminatedString(buffer, position, position + value.bytes)
 		// BUG: what happens at the end of the file? we'll add +1 and be out of range
 		retval.end = retval.start + ((new TextEncoder().encode(retval.value)).length); // don't -1 because we need to count the null terminator we found
+		return retval;
+	}
+
+	if(value.type == 'repeater')
+	{
+		retval = [];
+
+		while(!isSectionEndMarker(buffer, position, value.until))
+		{
+			for(var i = 0; i < value.values.length; i++)
+			{
+				let result = interpretValue(buffer, position, value.values[i]);
+				retval.push(result);
+				position = result.end + 1
+			}
+		}
+
+		retval.push({
+			name: 'Separator',
+			type: 'ctrl',
+			value: "0x" + buffer.toString('hex', position, position + value.until.length).toUpperCase(),
+			start: position,
+			end: position + value.until.length - 1
+		})
+
 		return retval;
 	}
 
@@ -111,9 +158,22 @@ function readNullTerminatedString(buffer, start, end)
 	return buffer.toString('utf8', start, p)
 }
 
-function isSectionEndMarker(buffer, position, section)
+function isSectionEndMarker(buffer, position, until)
 {
-	//for(var i = position; i < position + section.)
+	// end of file
+	if(position >= buffer.length - until.length)
+		return false;
+
+	// compare until with current buffer pos
+	for(var i = 0; i < until.length; i++)
+	{
+		if(buffer[position + i] != until[i])
+			return false;
+		else
+			continue;
+	}
+
+	return true;
 }
 
 
@@ -125,12 +185,37 @@ function expandSection(key, node)
 	}
 	
 	for(var key of Object.keys(node))
-		retval.values.push(expandDatum(key, node[key]));
+	{
+		if(key == "repeat")
+		{
+			var subKeys = Object.keys(node[key])
+			if(subKeys[subKeys.length - 1] == "until")
+			{
+				subKeys.splice(-1, 1);
 
+				const repeater = {
+					type: 'repeater',
+					until: node[key]["until"],
+					values: []
+				}
+
+				for(var i = 0; i < subKeys.length; i++)
+					repeater.values.push(expandValue(subKeys[i], node[key][subKeys[i]]));	
+
+				retval.values.push(repeater);
+			}
+		}
+		else
+		{
+			retval.values.push(expandValue(key, node[key]));
+		}
+	}
+	
+	
 	return retval;
 }
 
-function expandDatum(key, node)
+function expandValue(key, node)
 {
 	if(node === null)
 	{
@@ -147,6 +232,42 @@ function expandDatum(key, node)
 			name: key,
 			bytes: node,
 			type: "?"
+		}
+	}
+
+	if(node == "uint8")
+	{
+		return {
+			name: key,
+			bytes: 1,
+			type: "uint8"
+		}
+	}
+
+	if(node == "uint16")
+	{
+		return {
+			name: key,
+			bytes: 2,
+			type: "uint16"
+		}
+	}
+
+	if(node == "uint24")
+	{
+		return {
+			name: key,
+			bytes: 3,
+			type: "uint24"
+		}
+	}
+
+	if(node == "uint32")
+	{
+		return {
+			name: key,
+			bytes: 4,
+			type: "uint32"
 		}
 	}
 

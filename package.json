@@ -16,6 +16,7 @@
     "mathjs": "^11.11.0",
     "yamljs": "^0.3.0"
   },
+  "type": "module",
   "devDependencies": {
     "css-loader": "^6.8.1",
     "file-loader": "^6.2.0",

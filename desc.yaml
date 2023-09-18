@@ -1,8 +1,12 @@
 header:
   version:
   finished:
-  log id: 15
-  config name: 23
+  log id: 
+    bytes: 15
+    type: nullstr
+  config name:
+    bytes: 23
+    type: nullstr
   time: uint64
   location: nullstr
   latitude:
@@ -15,4 +19,4 @@ logs:
   - log:
       time: uint24
       altitude: uint24
-    end: 0xFFFFFF
+    end: [ 0xFF, 0xFF, 0xFF ]

@@ -1,62 +1,17 @@
-var yaml = require('js-yaml');
-const fs = require('fs');
 
-let desc = fs.readFileSync('desc.yaml');
+import fs from 'fs'
+import { interpret, parseSchema } from './src/interpreter.js';
 
-let json = yaml.load(desc);
+let desc = fs.readFileSync('desc.yaml', 'utf8');
+let schema = parseSchema(desc);
 
-for(var key of Object.keys(json))
-	json[key] = expandSection(key, json[key]);
+console.log(schema);
 
-console.log(json);
 
-function expandSection(key, node)
-{
-	let retval = {
-		name: key,
-		values: {}
-	}
-	
-	for(var key of Object.keys(node))
-		retval.values[key] = expandDatum(node[key]);
+let file = fs.readFileSync('log');
+schema.littleEndian = true
+let result = interpret(file, schema);
 
-	return retval;
-}
 
-function expandDatum(node)
-{
-	if(node === null)
-	{
-		return {
-			bytes: 1,
-			type: "?"
-		}
-	}
-
-	if(!isNaN(node))
-	{
-		return {
-			bytes: node,
-			type: "?"
-		}
-	}
-
-	if(node == "uint64")
-	{
-		return {
-			bytes: 8,
-			type: "uint64"
-		}
-	}
-
-	
-	if(node == "nullstr")
-	{
-		return {
-			bytes: undefined,
-			type: "nullstr"
-		}
-	}
-
-	return node;
-}
+for(var i = 0; i < result.length; i++)
+	console.log(result[i]);

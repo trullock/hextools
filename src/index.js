@@ -12,7 +12,8 @@ const Buffer = buff.Buffer;
 
 import { evaluate } from 'mathjs';
 import '@trullock/dollar'
-import { interpret, parseSchema } from './interpreter.js'
+import { interpret } from './interpreter.js'
+import { parseSchema } from './parser.js'
 
 const $frmDecoder = document.querySelector('form.js-decoder');
 			

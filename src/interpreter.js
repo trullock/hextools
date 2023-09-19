@@ -1,58 +1,48 @@
-
-import yaml from 'js-yaml'
-
-export function parseSchema(yml)
-{
-	let json = yaml.load(yml);
-
-	let schema = {
-		sections: []
-	}
-
-	for(var key of Object.keys(json))
-		schema.sections.push(expandSection(key, json[key]));
-
-	return schema;
-}
+let position = 0;
+let results = [];
 
 export function interpret(buffer, schema)
 {
-	let p = 0;
-	let result = [];
+	position = 0;
+	results = [];
 
 	for(var s = 0; s < schema.sections.length; s++)
 	{
 		let section = schema.sections[s];
 
-		for(var v = 0; v < section.values.length; v++)
-		{
-			let value = section.values[v];
-
-			let datum = interpretValue(buffer, p, value, schema.littleEndian)
-			
-			// TODO: remove once complete
-			if(!datum)
-				continue;
-
-			if(Array.isArray(datum) && datum.length)
-			{
-				result = result.concat(datum);
-				p = datum[datum.length - 1].end + 1;
-			}
-			else 
-			{
-				result.push(datum);
-				p = datum.end + 1;
-			}
-		}
+		if(!interpretValues(buffer, section.values, schema.littleEndian))
+			break;
 	}
 
-	return result;
+	return results;
 }
 
-function interpretValue(buffer, position, value, littleEndian)
+function interpretValues(buffer, values, littleEndian)
 {
-	let retval = {
+	if(!values.length)
+		return true;
+
+	// all values must be matches or not
+	let matching = !!values[0].match
+	let matchAggregate = false;
+
+	for(var v = 0; v < values.length; v++)
+	{
+		let result = interpretValue(buffer, values[v], littleEndian)
+
+		if(!matching && !result)
+			return false;
+
+		if(matching)
+			matchAggregate |= result;
+	}
+
+	return matching ? matchAggregate : true;
+}
+
+function interpretValue(buffer, value, littleEndian)
+{
+	let result = {
 		name: value.name,
 		start: position,
 		end: value.bytes ? position + value.bytes - 1 : undefined,
@@ -60,79 +50,135 @@ function interpretValue(buffer, position, value, littleEndian)
 		value: undefined
 	}
 
-	if(value.bytes === 1)
+	if(value.type == 'uint24')
 	{
-		retval.value = buffer[position]
-		if(retval.type == '?')
-			retval.type = 'byte';
+		if(position > buffer.length - 3)
+			return false;
 
-		return retval;
-	} 
+		result.value = littleEndian ? buffer.readUIntLE(position, 3) : buffer.readUIntBE(position, 3);
+		result.end = result.start + 3 - 1;
+		position = result.end + 1;
+		results.push(result);
+		return true;
+	}
+
+	if(value.type == 'uint16')
+	{
+		if(position > buffer.length - 2)
+			return false;
+
+		result.value =  littleEndian ? buffer.readUInt16LE(position) : buffer.readUInt16BE(position);
+		result.end = result.start + 2 - 1;
+		position = result.end + 1;
+		results.push(result);
+		return true;
+	}
+
+
+	if(value.type == 'uint32')
+	{
+		if(position > buffer.length - 4)
+			return false;
+
+		result.value =  littleEndian ? buffer.readUInt32LE(position) : buffer.readUInt32BE(position);
+		result.end = result.start + 4 - 1;
+		position = result.end + 1;
+		results.push(result);
+		return true;
+	}
+
+	if(value.type == 'uint64')
+	{
+		if(position > buffer.length - 8)
+			return false;
+
+		result.value =  littleEndian ? buffer.readBigUInt64LE(position) : buffer.readBigUInt64BE(position);
+		result.end = result.start + 8 - 1;
+		position = result.end + 1;
+		results.push(result);
+		return true;
+	}
 
 	if(!isNaN(value.bytes))
 	{
+		if(position > buffer.length - value.bytes)
+			return false;
+
 		if(value.type == 'nullstr')
 		{
-			retval.type = 'utf8'
-			retval.value = readNullTerminatedString(buffer, position, position + value.bytes)
-			retval.end = retval.start + value.bytes - 1;
-			return retval;
+			result.type = 'utf8'
+			result.value = readNullTerminatedString(buffer, position, position + value.bytes)
+			result.end = result.start + value.bytes - 1;
+			position = result.end + 1;
+			results.push(result);
+			return true;
 		}
 
 		if(value.type == 'float')
 		{
 			if(value.bytes == 8)
-			retval.value =  littleEndian ? buffer.readDoubleLE(position) : buffer.readDoubleBE(position);
+				result.value =  littleEndian ? buffer.readDoubleLE(position) : buffer.readDoubleBE(position);
 			else if(value.bytes == 4)
-				retval.value =  littleEndian ? buffer.readFloatLE(position) : buffer.readFloatBE(position);
+				result.value =  littleEndian ? buffer.readFloatLE(position) : buffer.readFloatBE(position);
 			else
 				throw new Error(`Unsupported float number of bytes ${value.bytes} for ${value.name}`);
 			
-			retval.end = retval.start + value.bytes - 1;
+			result.end = result.start + value.bytes - 1;
+			position = result.end + 1;
 
-			return retval;
+			results.push(result);
+			return true;
 		}
-	}
 
-	if(value.type == 'uint24')
-	{
-		retval.value = littleEndian ? buffer.readUIntLE(position, 3) : buffer.readUIntBE(position, 3);
-		retval.end = retval.start + 3 - 1;
-		return retval;
+		if(result.type == '?')
+		{
+			result.value = "0x" + buffer.toString('hex', position, position + value.bytes).toUpperCase();
+			result.type = 'raw';
+			result.end = position + value.bytes - 1
+			position = result.end + 1;
+			results.push(result);
+			return true;
+		}
+			
+		
 	}
-
-	if(value.type == 'uint64')
-	{
-		retval.value =  littleEndian ? buffer.readBigUInt64LE(position) : buffer.readBigUInt64BE(position);
-		retval.end = retval.start + 8 - 1;
-		return retval;
-	}
-	
 
 	if(value.type == 'nullstr')
 	{
-		retval.type = 'utf8'
-		retval.value = readNullTerminatedString(buffer, position, position + value.bytes)
+		if(position > buffer.length - 1)
+			return false;
+
+		result.type = 'utf8'
+		result.value = readNullTerminatedString(buffer, position, position + value.bytes)
 		// BUG: what happens at the end of the file? we'll add +1 and be out of range
-		retval.end = retval.start + ((new TextEncoder().encode(retval.value)).length); // don't -1 because we need to count the null terminator we found
-		return retval;
+		result.end = result.start + ((new TextEncoder().encode(result.value)).length); // don't -1 because we need to count the null terminator we found
+		position = result.end + 1;
+		results.push(result);
+		return true;
 	}
 
 	if(value.type == 'repeater')
+		return interpretRepeater(buffer, value, littleEndian);
+
+	if(value.type == 'match')
+		return interpretMatch(buffer, value, littleEndian);
+
+	
+
+	throw new Error(`Node type not supported ${value.type}`);
+}
+
+function interpretRepeater(buffer, value, littleEndian)
+{
+	while(!isSectionEndMarker(buffer, position, value.until))
 	{
-		retval = [];
-
-		while(!isSectionEndMarker(buffer, position, value.until))
-		{
-			for(var i = 0; i < value.values.length; i++)
-			{
-				let result = interpretValue(buffer, position, value.values[i]);
-				retval.push(result);
-				position = result.end + 1
-			}
-		}
-
-		retval.push({
+		if(!interpretValues(buffer, value.values, littleEndian))
+			return false;
+	}
+	
+	if(value.until != "eof")
+	{
+		results.push({
 			name: 'Separator',
 			type: 'ctrl',
 			value: "0x" + buffer.toString('hex', position, position + value.until.length).toUpperCase(),
@@ -140,10 +186,18 @@ function interpretValue(buffer, position, value, littleEndian)
 			end: position + value.until.length - 1
 		})
 
-		return retval;
+		position += value.until.length;
 	}
 
-	return null;
+	return true;
+}
+
+function interpretMatch(buffer, value, littleEndian)
+{
+	if(bytesMatch(buffer, position, value.match))
+		return interpretValues(buffer, value.values, littleEndian)	
+	
+	return false;
 }
 
 // end is exclusive
@@ -158,16 +212,19 @@ function readNullTerminatedString(buffer, start, end)
 	return buffer.toString('utf8', start, p)
 }
 
-function isSectionEndMarker(buffer, position, until)
+function isSectionEndMarker(buffer, pos, until)
 {
+	if(until == "eof")
+		return false;
+
 	// end of file
-	if(position >= buffer.length - until.length)
+	if(pos >= buffer.length - until.length)
 		return false;
 
 	// compare until with current buffer pos
 	for(var i = 0; i < until.length; i++)
 	{
-		if(buffer[position + i] != until[i])
+		if(buffer[pos + i] != until[i])
 			return false;
 		else
 			continue;
@@ -176,123 +233,20 @@ function isSectionEndMarker(buffer, position, until)
 	return true;
 }
 
-
-function expandSection(key, node)
+function bytesMatch(buffer, pos, compare)
 {
-	let retval = {
-		name: key,
-		values: []
-	}
-	
-	for(var key of Object.keys(node))
+	// end of file
+	if(pos >= buffer.length - compare.length)
+		return false;
+
+	// compare until with current buffer pos
+	for(var i = 0; i < compare.length; i++)
 	{
-		if(key == "repeat")
-		{
-			var subKeys = Object.keys(node[key])
-			if(subKeys[subKeys.length - 1] == "until")
-			{
-				subKeys.splice(-1, 1);
-
-				const repeater = {
-					type: 'repeater',
-					until: node[key]["until"],
-					values: []
-				}
-
-				for(var i = 0; i < subKeys.length; i++)
-					repeater.values.push(expandValue(subKeys[i], node[key][subKeys[i]]));	
-
-				retval.values.push(repeater);
-			}
-		}
+		if(buffer[pos + i] != compare[i])
+			return false;
 		else
-		{
-			retval.values.push(expandValue(key, node[key]));
-		}
-	}
-	
-	
-	return retval;
-}
-
-function expandValue(key, node)
-{
-	if(node === null)
-	{
-		return {
-			name: key,
-			bytes: 1,
-			type: "?"
-		}
+			continue;
 	}
 
-	if(!isNaN(node))
-	{
-		return {
-			name: key,
-			bytes: node,
-			type: "?"
-		}
-	}
-
-	if(node == "uint8")
-	{
-		return {
-			name: key,
-			bytes: 1,
-			type: "uint8"
-		}
-	}
-
-	if(node == "uint16")
-	{
-		return {
-			name: key,
-			bytes: 2,
-			type: "uint16"
-		}
-	}
-
-	if(node == "uint24")
-	{
-		return {
-			name: key,
-			bytes: 3,
-			type: "uint24"
-		}
-	}
-
-	if(node == "uint32")
-	{
-		return {
-			name: key,
-			bytes: 4,
-			type: "uint32"
-		}
-	}
-
-	if(node == "uint64")
-	{
-		return {
-			name: key,
-			bytes: 8,
-			type: "uint64"
-		}
-	}
-
-	
-	if(node == "nullstr")
-	{
-		return {
-			name: key,
-			bytes: undefined,
-			type: "nullstr"
-		}
-	}
-
-	return {
-		name: key,
-		bytes: node.bytes,
-		type: node.type
-	};
+	return true;
 }

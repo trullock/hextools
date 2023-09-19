@@ -16,19 +16,25 @@ header:
     bytes: 8
     type: float
 logs:
-  repeat:
+  Flight Data:
     time: uint24
     altitude: uint24
-    until: [ 0xFF, 0xFF, 0xFF, 0xFF ]
-  repeat:
+    repeat until: [ 0xFF, 0xFF, 0xFF, 0xFF ]
+  Phase Events:
     time: uint32
     latency: uint16
     phase:
-    until: [ 0xFF, 0xFF, 0xFF, 0xFF ]
-  repeat:
-    PWM Event:
-      event:
-        bytes: 1
-        match: 0x01
-      channel:
-      pwm duty:
+    repeat until: [ 0xFF, 0xFF, 0xFF, 0xFF ]
+  Flight Events:
+    time: uint32
+    trigger:
+    value:
+      bytes: 2
+    conditional logic:
+    conditional altitude: uint16
+    conditional velocity:
+    latency: uint16
+    delay: uint32
+    event:
+    channel:
+    repeat until: eof

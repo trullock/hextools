@@ -1,6 +1,7 @@
 
 import fs from 'fs'
-import { interpret, parseSchema } from './src/interpreter.js';
+import { interpret } from './src/interpreter.js';
+import { parseSchema } from './src/parser.js';
 
 let desc = fs.readFileSync('desc.yaml', 'utf8');
 let schema = parseSchema(desc);

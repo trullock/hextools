@@ -50,8 +50,8 @@ const $calcOut = document.querySelector('.js-calculator-output');
 
 function dec2bin(num)
 {
-	let bin = '000' + num.toString(2);
-	return bin.substr(-4, 4);
+	let bin = '0000000' + num.toString(2);
+	return bin.substr(-8, 8);
 }
 
 function uint82hex(num, padding = 2)
@@ -71,7 +71,6 @@ $frmDecoder.addEventListener('input', e => {
 	buff[3] = parseInt($byte3.value, 16)
 
 	const view = new DataView(buff.buffer);
-
 	$binary0.textContent = dec2bin(buff[0]);
 	$binary1.textContent = dec2bin(buff[1]);
 	$binary2.textContent = dec2bin(buff[2]);
